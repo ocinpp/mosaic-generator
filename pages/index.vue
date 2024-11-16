@@ -1,0 +1,242 @@
+<template>
+  <div class="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl mx-auto">
+      <h1 class="text-3xl font-bold text-center text-gray-900 mb-8">
+        Mosaic Photo Generator
+      </h1>
+
+      <div class="bg-white shadow-md rounded-lg p-6 mb-8">
+        <h2 class="text-xl font-semibold mb-4">1. Select Target Photo</h2>
+        <input
+          type="file"
+          accept="image/*"
+          @change="handleTargetPhotoUpload"
+          class="mb-4"
+          aria-label="Select target photo"
+        />
+        <div v-if="targetPhoto" class="mb-4">
+          <img
+            :src="targetPhoto"
+            alt="Target Photo"
+            class="max-w-full h-auto"
+          />
+        </div>
+      </div>
+
+      <div class="bg-white shadow-md rounded-lg p-6 mb-8">
+        <h2 class="text-xl font-semibold mb-4">2. Upload Pool Photos</h2>
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          @change="handlePoolPhotosUpload"
+          class="mb-4"
+          aria-label="Upload pool photos"
+        />
+        <div v-if="poolPhotos.length > 0" class="grid grid-cols-4 gap-4">
+          <div
+            v-for="(photo, index) in poolPhotos"
+            :key="index"
+            class="relative"
+          >
+            <img :src="photo" alt="Pool Photo" class="w-full h-auto" />
+            <button
+              @click="deletePoolPhoto(index)"
+              class="absolute top-0 right-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
+              aria-label="Delete photo"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white shadow-md rounded-lg p-6 mb-8">
+        <h2 class="text-xl font-semibold mb-4">3. Generate Mosaic</h2>
+        <button
+          @click="generateMosaic"
+          class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+          :disabled="!targetPhoto || poolPhotos.length === 0 || isGenerating"
+          aria-live="polite"
+        >
+          {{ isGenerating ? "Generating..." : "Generate Mosaic" }}
+        </button>
+      </div>
+
+      <div v-if="mosaicImage" class="bg-white shadow-md rounded-lg p-6">
+        <h2 class="text-xl font-semibold mb-4">4. Result</h2>
+        <img :src="mosaicImage" alt="Mosaic Result" class="max-w-full h-auto" />
+      </div>
+    </div>
+
+    <!-- Cancel Button -->
+    <button
+      v-if="isGenerating"
+      @click="cancelGeneration"
+      class="fixed bottom-4 right-4 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded z-50"
+      aria-live="polite"
+    >
+      Cancel Generation
+    </button>
+
+    <!-- Loading Overlay -->
+    <div
+      v-if="isGenerating"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40"
+    >
+      <div class="bg-white rounded-lg p-8 flex flex-col items-center">
+        <div class="loader mb-4" aria-hidden="true"></div>
+        <p class="text-lg font-semibold">Generating Mosaic...</p>
+        <p v-if="progress" class="mt-2">{{ progress }}</p>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted, onUnmounted } from "vue";
+
+const targetPhoto = ref(null);
+const poolPhotos = ref([]);
+const mosaicImage = ref(null);
+const isGenerating = ref(false);
+const progress = ref("");
+let worker = null;
+
+onMounted(() => {
+  worker = new Worker("/mosaic-worker.js");
+  worker.onmessage = (e) => {
+    if (e.data.error) {
+      alert(e.data.error);
+      isGenerating.value = false;
+    } else if (e.data.progress) {
+      progress.value = e.data.progress;
+    } else {
+      mosaicImage.value = e.data.mosaicImage;
+      isGenerating.value = false;
+      progress.value = "";
+    }
+  };
+});
+
+onUnmounted(() => {
+  if (worker) {
+    worker.terminate();
+  }
+});
+
+const handleTargetPhotoUpload = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      targetPhoto.value = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+};
+
+const handlePoolPhotosUpload = (event) => {
+  const files = event.target.files;
+  if (files) {
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        poolPhotos.value.push(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+};
+
+const deletePoolPhoto = (index) => {
+  poolPhotos.value.splice(index, 1);
+};
+
+const generateMosaic = async () => {
+  if (!targetPhoto.value || poolPhotos.value.length === 0 || !worker) return;
+
+  isGenerating.value = true;
+  progress.value = "Preparing images...";
+
+  try {
+    // Convert data URIs to ArrayBuffers
+    const targetBuffer = await fetch(targetPhoto.value).then((r) =>
+      r.arrayBuffer()
+    );
+    const poolBuffers = await Promise.all(
+      poolPhotos.value.map((photo) => fetch(photo).then((r) => r.arrayBuffer()))
+    );
+
+    // Send data in chunks
+    const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB chunks
+    const sendChunk = (data, start) => {
+      const end = Math.min(start + CHUNK_SIZE, data.byteLength);
+      worker.postMessage(
+        {
+          chunk: data.slice(start, end),
+          start,
+          end,
+          total: data.byteLength,
+        },
+        [data.slice(start, end)]
+      );
+      if (end < data.byteLength) {
+        setTimeout(() => sendChunk(data, end), 0);
+      }
+    };
+
+    worker.postMessage({ action: "start", tileSize: 20 });
+    sendChunk(targetBuffer, 0);
+    for (const buffer of poolBuffers) {
+      sendChunk(buffer, 0);
+    }
+    worker.postMessage({ action: "process" });
+  } catch (error) {
+    console.error("Error in generateMosaic:", error);
+    alert("An error occurred while generating the mosaic. Please try again.");
+    isGenerating.value = false;
+  }
+};
+
+const cancelGeneration = () => {
+  if (worker) {
+    worker.terminate();
+    worker = new Worker("/mosaic-worker.js");
+    worker.onmessage = (e) => {
+      if (e.data.error) {
+        alert(e.data.error);
+        isGenerating.value = false;
+      } else if (e.data.progress) {
+        progress.value = e.data.progress;
+      } else {
+        mosaicImage.value = e.data.mosaicImage;
+        isGenerating.value = false;
+        progress.value = "";
+      }
+    };
+  }
+  isGenerating.value = false;
+  progress.value = "";
+};
+</script>
+
+<style scoped>
+.loader {
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #3498db;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+</style>
