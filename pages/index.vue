@@ -12,7 +12,7 @@
         </h1>
 
         <div class="flex flex-col lg:flex-row">
-          <div class="lg:w-3/10 lg:pr-8">
+          <div class="lg:w-1/4 lg:pr-8">
             <div
               class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 mb-8 max-w-sm mx-auto"
             >
@@ -96,7 +96,7 @@
             </div>
           </div>
 
-          <div class="lg:w-7/10 lg:pl-8">
+          <div class="lg:w-3/4 lg:pl-8">
             <main
               class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 h-full"
             >
