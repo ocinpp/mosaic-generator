@@ -26,28 +26,27 @@ Before you begin, ensure you have the following installed:
    ```bash
    git clone <repository-url>
    cd mosaic-generator
+   ```
 
 2. **Install dependencies**
 
-```shellscript
- # Using npm# Using npm
-npm install
+    ```bash
+    # Using npm# Using npm
+    npm install
 
-# Using yarn
-yarn install
-
-```
+    # Using yarn
+    yarn install
+    ```
 
 3. **Start the development server**
 
-```shellscript
- # Using npm# Using npm
-npm run dev
+    ```bash
+    # Using npm# Using npm
+    npm run dev
 
-# Using yarn
-yarn dev
-
-```
+    # Using yarn
+    yarn dev
+    ```
 
 4. **Open your browser**
 Navigate to `http://localhost:3000` to see the application running.
@@ -134,7 +133,7 @@ Navigate to `http://localhost:3000` to see the application running.
 
 ### Building for Production
 
-```shellscript
+```bash
  # Using npm# Using npm
 npm run build
 npm run start
@@ -142,7 +141,6 @@ npm run start
 # Using yarn
 yarn build
 yarn start
-
 ```
 
 ## Troubleshooting
