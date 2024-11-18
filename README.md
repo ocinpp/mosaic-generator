@@ -70,23 +70,23 @@ Navigate to `http://localhost:3000` to see the application running.
 
 1. **Image Upload**
 
-1. The target photo is uploaded and displayed
-2. Pool photos can be added multiple times and deleted individually
+    1. The target photo is uploaded and displayed
+    2. Pool photos can be added multiple times and deleted individually
 
 2. **Mosaic Generation**
 
-1. The application divides the target image into small tiles
-2. For each tile, it:
+    1. The application divides the target image into small tiles
+    2. For each tile, it:
 
-1. Calculates the average color
-2. Finds the best matching image from the pool
-3. Replaces the tile with the matching image
+        1. Calculates the average color
+        2. Finds the best matching image from the pool
+        3. Replaces the tile with the matching image
 
 3. **Performance Optimization**
 
-1. Uses Web Workers for heavy computation
-2. Implements chunked data transfer to handle large images
-3. Provides progress updates during generation
+    1. Uses Web Workers for heavy computation
+    2. Implements chunked data transfer to handle large images
+    3. Provides progress updates during generation
 
 ### Technical Implementation
 
@@ -99,29 +99,29 @@ Navigate to `http://localhost:3000` to see the application running.
 
 1. **Upload Target Photo**
 
-1. Click on the "Select target photo" input to choose your main image
+    1. Click on the "Select target photo" input to choose your main image
 
 2. **Add Pool Photos**
 
-1. Use the "Upload pool photos" input to select multiple images for your mosaic tiles
-2. You can add more photos at any time
+    1. Use the "Upload pool photos" input to select multiple images for your mosaic tiles
+    2. You can add more photos at any time
 
 3. **Manage Pool Photos**
 
-1. Delete unwanted photos from the pool by clicking the "×" button on each image
+    1. Delete unwanted photos from the pool by clicking the "×" button on each image
 
 4. **Generate Mosaic**
 
-1. Click the "Generate Mosaic" button to start the process
-2. A progress indicator will show the current status
+    1. Click the "Generate Mosaic" button to start the process
+    2. A progress indicator will show the current status
 
 5. **Cancel Generation**
 
-1. If needed, click the "Cancel Generation" button to stop the process
+    1. If needed, click the "Cancel Generation" button to stop the process
 
 6. **View Result**
 
-1. Once complete, the generated mosaic will appear in the "Result" section
+    1. Once complete, the generated mosaic will appear in the "Result" section
 
 ## Development
 
@@ -149,18 +149,18 @@ Common issues and solutions:
 
 1. **Image Upload Issues**
 
-1. Ensure images are in supported formats (PNG, JPEG)
-2. Check file size limits in your browser
+    1. Ensure images are in supported formats (PNG, JPEG)
+    2. Check file size limits in your browser
 
 2. **Generation Performance**
 
-1. Reduce the number of pool images for faster processing
-2. Use smaller target images for quicker results
+    1. Reduce the number of pool images for faster processing
+    2. Use smaller target images for quicker results
 
 3. **Browser Compatibility**
 
-1. Ensure your browser supports Web Workers
-2. Enable JavaScript execution
+    1. Ensure your browser supports Web Workers
+    2. Enable JavaScript execution
 
 ## Contributing
 
