@@ -81,7 +81,65 @@
               <h2
                 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white"
               >
-                3. Generate Mosaic
+                3. Mosaic Parameters
+              </h2>
+              <div class="mb-4">
+                <label
+                  for="tileSize"
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Tile Size
+                  <span
+                    class="ml-1 text-gray-500 dark:text-gray-400 cursor-help"
+                    title="Determines the size of each mosaic tile. Smaller values create more detailed mosaics but take longer to generate."
+                    >(?)</span
+                  >
+                </label>
+                <input
+                  type="range"
+                  id="tileSize"
+                  v-model="tileSize"
+                  min="5"
+                  max="50"
+                  class="w-full"
+                />
+                <span class="text-sm text-gray-500 dark:text-gray-400"
+                  >{{ tileSize }}px</span
+                >
+              </div>
+              <div class="mb-4">
+                <label
+                  for="colorAdjustment"
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Color Adjustment
+                  <span
+                    class="ml-1 text-gray-500 dark:text-gray-400 cursor-help"
+                    title="Controls the balance between the original image colors and the mosaic tile colors. Higher values result in a mosaic that's closer to the original image colors."
+                    >(?)</span
+                  >
+                </label>
+                <input
+                  type="range"
+                  id="colorAdjustment"
+                  v-model="colorAdjustment"
+                  min="0"
+                  max="100"
+                  class="w-full"
+                />
+                <span class="text-sm text-gray-500 dark:text-gray-400"
+                  >{{ colorAdjustment }}%</span
+                >
+              </div>
+            </div>
+
+            <div
+              class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 mb-8"
+            >
+              <h2
+                class="text-xl font-semibold mb-4 text-gray-900 dark:text-white"
+              >
+                4. Generate Mosaic
               </h2>
               <button
                 @click="generateMosaic"
@@ -103,7 +161,7 @@
               <h2
                 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white"
               >
-                4. Result
+                Result
               </h2>
               <div v-if="mosaicImage" class="mb-4 flex flex-col items-center">
                 <img
@@ -117,6 +175,9 @@
                 >
                   Download Mosaic
                 </button>
+              </div>
+              <div v-else-if="error" class="text-red-600 dark:text-red-400">
+                {{ error }}
               </div>
               <div
                 v-else
@@ -165,6 +226,12 @@
         <p v-if="progress" class="mt-2 text-gray-600 dark:text-gray-400">
           {{ progress }}
         </p>
+        <p class="mt-2 text-gray-600 dark:text-gray-400">
+          Progress: {{ percentProgress }}%
+        </p>
+        <p class="mt-2 text-gray-600 dark:text-gray-400">
+          Time elapsed: {{ elapsedTime }}s
+        </p>
       </div>
     </div>
   </div>
@@ -180,7 +247,14 @@ const mosaicImage = ref(null);
 const isGenerating = ref(false);
 const progress = ref("");
 const isDarkMode = ref(false);
+const tileSize = ref(20);
+const colorAdjustment = ref(50);
+const error = ref(null);
+const percentProgress = ref(0);
+const elapsedTime = ref(0);
 let worker = null;
+let generationTimeout = null;
+let elapsedTimeInterval = null;
 
 useHead({
   title: "Mosaic Photo Generator",
@@ -190,19 +264,8 @@ useHead({
 });
 
 onMounted(() => {
-  worker = new Worker("/mosaic-worker.js");
-  worker.onmessage = (e) => {
-    if (e.data.error) {
-      alert(e.data.error);
-      isGenerating.value = false;
-    } else if (e.data.progress) {
-      progress.value = e.data.progress;
-    } else {
-      mosaicImage.value = e.data.mosaicImage;
-      isGenerating.value = false;
-      progress.value = "";
-    }
-  };
+  console.log("Component mounted");
+  initializeWorker();
 
   // Initialize dark mode based on user preference
   if (
@@ -217,6 +280,12 @@ onUnmounted(() => {
   if (worker) {
     worker.terminate();
   }
+  if (generationTimeout) {
+    clearTimeout(generationTimeout);
+  }
+  if (elapsedTimeInterval) {
+    clearInterval(elapsedTimeInterval);
+  }
 });
 
 watch(isDarkMode, (newValue) => {
@@ -226,6 +295,48 @@ watch(isDarkMode, (newValue) => {
     document.documentElement.classList.remove("dark");
   }
 });
+
+const initializeWorker = () => {
+  console.log("Initializing worker");
+  worker = new Worker("/mosaic-worker.js");
+  worker.onmessage = (e) => {
+    console.log("Worker message received:", e.data);
+    if (e.data.error) {
+      console.error("Error from worker:", e.data.error);
+      handleError(e.data.error);
+    } else if (e.data.progress) {
+      progress.value = e.data.progress;
+      if (e.data.percentage !== undefined) {
+        percentProgress.value = e.data.percentage;
+      }
+    } else if (e.data.mosaicImage) {
+      console.log("Mosaic image received");
+      mosaicImage.value = e.data.mosaicImage;
+      isGenerating.value = false;
+      progress.value = "";
+      percentProgress.value = 100;
+      clearTimeout(generationTimeout);
+      clearInterval(elapsedTimeInterval);
+      // Clear worker buffers
+      worker.postMessage({ action: "clear" });
+    }
+  };
+  worker.onerror = (err) => {
+    console.error("Worker error:", err);
+    handleError(`Worker error: ${err.message}`);
+  };
+};
+
+const handleError = (errorMessage) => {
+  console.error("Error in mosaic generation:", errorMessage);
+  error.value = errorMessage;
+  isGenerating.value = false;
+  progress.value = "";
+  percentProgress.value = 0;
+  elapsedTime.value = 0;
+  clearTimeout(generationTimeout);
+  clearInterval(elapsedTimeInterval);
+};
 
 const handleTargetPhotoUpload = (event) => {
   const file = event.target.files[0];
@@ -244,7 +355,10 @@ const handlePoolPhotosUpload = (event) => {
     Array.from(files).forEach((file) => {
       const reader = new FileReader();
       reader.onload = (e) => {
-        poolPhotos.value.push(e.target.result);
+        const newImage = e.target.result;
+        if (!poolPhotos.value.includes(newImage)) {
+          poolPhotos.value.push(newImage);
+        }
       };
       reader.readAsDataURL(file);
     });
@@ -260,6 +374,16 @@ const generateMosaic = async () => {
 
   isGenerating.value = true;
   progress.value = "Preparing images...";
+  error.value = null;
+  percentProgress.value = 0;
+  elapsedTime.value = 0;
+
+  console.log("Starting mosaic generation with tile size:", tileSize.value);
+
+  const startTime = Date.now();
+  elapsedTimeInterval = setInterval(() => {
+    elapsedTime.value = Math.floor((Date.now() - startTime) / 1000);
+  }, 1000);
 
   try {
     // Convert data URIs to ArrayBuffers
@@ -269,6 +393,8 @@ const generateMosaic = async () => {
     const poolBuffers = await Promise.all(
       poolPhotos.value.map((photo) => fetch(photo).then((r) => r.arrayBuffer()))
     );
+
+    console.log("Images prepared, sending to worker");
 
     // Send data in chunks
     const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB chunks
@@ -288,38 +414,43 @@ const generateMosaic = async () => {
       }
     };
 
-    worker.postMessage({ action: "start", tileSize: 20 });
+    worker.postMessage({
+      action: "start",
+      tileSize: Number(tileSize.value),
+      colorAdjustment: colorAdjustment.value / 100,
+    });
     sendChunk(targetBuffer, 0);
     for (const buffer of poolBuffers) {
       sendChunk(buffer, 0);
     }
     worker.postMessage({ action: "process" });
+
+    // Set a timeout to check if the generation is taking too long
+    generationTimeout = setTimeout(() => {
+      if (isGenerating.value) {
+        handleError(
+          "Generation is taking longer than expected. Please try again with smaller images or fewer pool photos."
+        );
+      }
+    }, 3600000); // 60 minutes timeout
   } catch (error) {
-    console.error("Error in generateMosaic:", error);
-    alert("An error occurred while generating the mosaic. Please try again.");
-    isGenerating.value = false;
+    handleError(`Error in generateMosaic: ${error.message}`);
   }
 };
 
 const cancelGeneration = () => {
+  console.log("Cancelling mosaic generation");
   if (worker) {
+    worker.postMessage({ action: "clear" });
     worker.terminate();
-    worker = new Worker("/mosaic-worker.js");
-    worker.onmessage = (e) => {
-      if (e.data.error) {
-        alert(e.data.error);
-        isGenerating.value = false;
-      } else if (e.data.progress) {
-        progress.value = e.data.progress;
-      } else {
-        mosaicImage.value = e.data.mosaicImage;
-        isGenerating.value = false;
-        progress.value = "";
-      }
-    };
+    initializeWorker();
   }
   isGenerating.value = false;
   progress.value = "";
+  percentProgress.value = 0;
+  elapsedTime.value = 0;
+  clearTimeout(generationTimeout);
+  clearInterval(elapsedTimeInterval);
 };
 
 const toggleDarkMode = () => {
@@ -339,14 +470,6 @@ const downloadMosaic = () => {
 </script>
 
 <style>
-@import "tailwindcss/base";
-@import "tailwindcss/components";
-@import "tailwindcss/utilities";
-
-.dark {
-  @apply bg-gray-900 text-white;
-}
-
 .loader {
   border: 5px solid #f3f3f3;
   border-top: 5px solid #3498db;
@@ -369,5 +492,8 @@ const downloadMosaic = () => {
 .dark .loader {
   border-color: #4a5568;
   border-top-color: #63b3ed;
+}
+.dark {
+  @apply bg-gray-900 text-white;
 }
 </style>
