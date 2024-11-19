@@ -7,9 +7,26 @@ A Vue.js application that generates photo mosaics by combining a target image wi
 - Upload a target photo to be transformed into a mosaic
 - Add multiple photos to create a pool of images for the mosaic
 - Delete individual photos from the pool
+- Adjust tile size for the mosaic
+- Adjust color balance between the original image and the mosaic tiles
 - Cancel mosaic generation at any time
 - Progress tracking during mosaic generation
+- Dark mode toggle
 - Responsive design that works on both desktop and mobile devices
+- Download generated mosaic
+
+## Recent Updates
+
+- Added dark mode support
+- Improved error handling and logging for better debugging
+- Added tooltips for Tile Size and Color Adjustment parameters
+- Fixed issues with mosaic generation for different tile sizes
+- Improved progress reporting during mosaic generation
+
+## Mosaic Parameters
+
+- **Tile Size**: Determines the size of each mosaic tile. Smaller values create more detailed mosaics but take longer to generate.
+- **Color Adjustment**: Controls the balance between the original image colors and the mosaic tile colors. Higher values result in a mosaic that's closer to the original image colors.
 
 ## Prerequisites
 
@@ -26,7 +43,6 @@ Before you begin, ensure you have the following installed:
    ```bash
    git clone <repository-url>
    cd mosaic-generator
-   ```
 
 2. **Install dependencies**
 
@@ -36,6 +52,7 @@ Before you begin, ensure you have the following installed:
 
     # Using yarn
     yarn install
+
     ```
 
 3. **Start the development server**
@@ -46,10 +63,13 @@ Before you begin, ensure you have the following installed:
 
     # Using yarn
     yarn dev
+
     ```
 
 4. **Open your browser**
-Navigate to `http://localhost:3000` to see the application running.
+
+    Navigate to `http://localhost:3000` to see the application running.
+
 
 ## Project Structure
 
@@ -110,18 +130,31 @@ Navigate to `http://localhost:3000` to see the application running.
 
     1. Delete unwanted photos from the pool by clicking the "×" button on each image
 
-4. **Generate Mosaic**
+4. **Adjust Mosaic Parameters**
+
+    1. Use the "Tile Size" slider to set the size of mosaic tiles
+    2. Use the "Color Adjustment" slider to balance between original and mosaic colors
+
+5. **Generate Mosaic**
 
     1. Click the "Generate Mosaic" button to start the process
-    2. A progress indicator will show the current status
+    2. A progress indicator will show the current status and elapsed time
 
-5. **Cancel Generation**
+6. **Cancel Generation**
 
     1. If needed, click the "Cancel Generation" button to stop the process
 
-6. **View Result**
+7. **View Result**
 
     1. Once complete, the generated mosaic will appear in the "Result" section
+
+8. **Download Mosaic**
+
+    1. Click the "Download Mosaic" button to save the generated image
+
+9. **Toggle Dark Mode**
+
+    1. Use the dark mode toggle in the top right corner to switch between light and dark modes
 
 ## Development
 
@@ -141,26 +174,42 @@ npm run start
 # Using yarn
 yarn build
 yarn start
+
 ```
 
 ## Troubleshooting
 
-Common issues and solutions:
+If you encounter any issues with mosaic generation:
 
-1. **Image Upload Issues**
+1. **Check the browser console for error messages or logs**
 
-    1. Ensure images are in supported formats (PNG, JPEG)
-    2. Check file size limits in your browser
+    - Open your browser's developer tools (usually F12 or right-click and select "Inspect")
+    - Go to the Console tab to view any error messages or logs
 
-2. **Generation Performance**
+2. **Image Upload Issues**
 
-    1. Reduce the number of pool images for faster processing
-    2. Use smaller target images for quicker results
+    - Ensure images are in supported formats (PNG, JPEG)
+    - Check file size limits in your browser
 
-3. **Browser Compatibility**
+3. **Generation Performance**
 
-    1. Ensure your browser supports Web Workers
-    2. Enable JavaScript execution
+    - Try using smaller tile sizes or fewer pool photos if the generation is taking too long
+    - Use smaller target images for quicker results
+
+4. **Browser Compatibility**
+
+    - Ensure your browser supports Web Workers and modern JavaScript features
+    - Try updating your browser to the latest version
+
+5. **Clear browser cache and reload**
+
+    - Sometimes, clearing your browser's cache and reloading the page can resolve issues
+
+6. **Check for updates**
+
+    - Make sure you're using the latest version of the application
+
+If the issue persists after trying these steps, please report it by opening an issue on the project repository with a detailed description of the problem and steps to reproduce it.
 
 ## Contributing
 
