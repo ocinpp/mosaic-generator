@@ -10,7 +10,6 @@
         >
           Mosaic Photo Generator
         </h1>
-
         <div class="flex flex-col lg:flex-row">
           <div class="lg:w-1/4 lg:pr-8">
             <div
@@ -188,7 +187,11 @@
             </main>
           </div>
         </div>
-
+        <div
+          class="fixed bottom-4 right-4 text-sm text-gray-500 dark:text-gray-400"
+        >
+          v{{ config.public.version }}
+        </div>
         <div class="fixed top-4 right-4">
           <button
             @click="toggleDarkMode"
@@ -240,6 +243,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from "vue";
 import { useHead } from "#imports";
+import { useRuntimeConfig } from "#app";
 
 const targetPhoto = ref(null);
 const poolPhotos = ref([]);
@@ -252,6 +256,7 @@ const colorAdjustment = ref(50);
 const error = ref(null);
 const percentProgress = ref(0);
 const elapsedTime = ref(0);
+const config = useRuntimeConfig();
 let worker = null;
 let generationTimeout = null;
 let elapsedTimeInterval = null;
