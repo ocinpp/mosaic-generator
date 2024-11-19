@@ -87,8 +87,14 @@
                 <label
                   for="tileSize"
                   class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >Tile Size</label
                 >
+                  Tile Size
+                  <span
+                    class="ml-1 text-gray-500 dark:text-gray-400 cursor-help"
+                    title="Determines the size of each mosaic tile. Smaller values create more detailed mosaics but take longer to generate."
+                    >(?)</span
+                  >
+                </label>
                 <input
                   type="range"
                   id="tileSize"
@@ -105,8 +111,14 @@
                 <label
                   for="colorAdjustment"
                   class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >Color Adjustment</label
                 >
+                  Color Adjustment
+                  <span
+                    class="ml-1 text-gray-500 dark:text-gray-400 cursor-help"
+                    title="Controls the balance between the original image colors and the mosaic tile colors. Higher values result in a mosaic that's closer to the original image colors."
+                    >(?)</span
+                  >
+                </label>
                 <input
                   type="range"
                   id="colorAdjustment"
@@ -480,5 +492,8 @@ const downloadMosaic = () => {
 .dark .loader {
   border-color: #4a5568;
   border-top-color: #63b3ed;
+}
+.dark {
+  @apply bg-gray-900 text-white;
 }
 </style>
