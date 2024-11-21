@@ -467,19 +467,19 @@ const generateMosaic = async () => {
 
     // Send data in chunks
     const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB chunks
-    const sendChunk = (data, start) => {
-      const end = Math.min(start + CHUNK_SIZE, data.byteLength);
-      worker.postMessage(
-        {
-          chunk: data.slice(start, end),
-          start,
-          end,
-          total: data.byteLength,
-        },
-        [data.slice(start, end)]
-      );
-      if (end < data.byteLength) {
-        setTimeout(() => sendChunk(data, end), 0);
+    const sendChunk = (data, isTarget) => {
+      for (let start = 0; start < data.byteLength; start += CHUNK_SIZE) {
+        const end = Math.min(start + CHUNK_SIZE, data.byteLength);
+        worker.postMessage(
+          {
+            chunk: data.slice(start, end),
+            start,
+            end,
+            total: data.byteLength,
+            isTarget,
+          },
+          [data.slice(start, end)]
+        );
       }
     };
 
@@ -488,9 +488,9 @@ const generateMosaic = async () => {
       tileSize: Number(tileSize.value),
       colorAdjustment: colorAdjustment.value / 100,
     });
-    sendChunk(targetBuffer, 0);
+    sendChunk(targetBuffer, true);
     for (const buffer of poolBuffers) {
-      sendChunk(buffer, 0);
+      sendChunk(buffer, false);
     }
     worker.postMessage({ action: "process" });
 
