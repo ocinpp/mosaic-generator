@@ -10,6 +10,42 @@
         >
           Mosaic Photo Generator
         </h1>
+
+        <HeadlessDisclosure as="div" class="mb-8" v-slot="{ open }">
+          <HeadlessDisclosureButton
+            class="flex justify-between w-full px-4 py-2 text-sm font-medium text-left text-gray-900 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus-visible:ring focus-visible:ring-gray-500 focus-visible:ring-opacity-75 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+          >
+            <span>Important Information</span>
+            <ChevronUpIcon
+              :class="open ? 'transform rotate-180' : ''"
+              class="w-5 h-5 text-gray-500"
+            />
+          </HeadlessDisclosureButton>
+          <HeadlessDisclosurePanel
+            class="px-4 pt-4 pb-2 text-sm text-gray-500 dark:text-gray-400"
+          >
+            <ul class="list-disc list-inside">
+              <li>Ensure all images are in PNG format for best results.</li>
+              <li>The target image should be larger than the pool images.</li>
+              <li>
+                A diverse pool of images will create more interesting mosaics.
+              </li>
+              <li>
+                Smaller tile sizes create more detailed mosaics but take longer
+                to generate.
+              </li>
+              <li>
+                The color adjustment slider balances between original colors and
+                mosaic tiles.
+              </li>
+              <li>
+                Generation time increases with larger images and smaller tile
+                sizes.
+              </li>
+            </ul>
+          </HeadlessDisclosurePanel>
+        </HeadlessDisclosure>
+
         <div class="flex flex-col lg:flex-row">
           <div class="lg:w-1/4 lg:pr-8">
             <div
@@ -88,11 +124,13 @@
                   class="block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
                   Tile Size
-                  <span
-                    class="ml-1 text-gray-500 dark:text-gray-400 cursor-help"
-                    title="Determines the size of each mosaic tile. Smaller values create more detailed mosaics but take longer to generate."
-                    >(?)</span
+                  <button
+                    @click="toggleTooltip('tileSize')"
+                    class="ml-1 text-gray-500 dark:text-gray-400 focus:outline-none"
+                    aria-label="Tile size information"
                   >
+                    ?
+                  </button>
                 </label>
                 <input
                   type="range"
@@ -105,6 +143,13 @@
                 <span class="text-sm text-gray-500 dark:text-gray-400"
                   >{{ tileSize }}px</span
                 >
+                <div
+                  v-if="activeTooltip === 'tileSize'"
+                  class="mt-2 p-2 bg-gray-100 dark:bg-gray-700 rounded text-sm text-gray-700 dark:text-gray-300"
+                >
+                  Determines the size of each mosaic tile. Smaller values create
+                  more detailed mosaics but take longer to generate.
+                </div>
               </div>
               <div class="mb-4">
                 <label
@@ -112,11 +157,13 @@
                   class="block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
                   Color Adjustment
-                  <span
-                    class="ml-1 text-gray-500 dark:text-gray-400 cursor-help"
-                    title="Controls the balance between the original image colors and the mosaic tile colors. Higher values result in a mosaic that's closer to the original image colors."
-                    >(?)</span
+                  <button
+                    @click="toggleTooltip('colorAdjustment')"
+                    class="ml-1 text-gray-500 dark:text-gray-400 focus:outline-none"
+                    aria-label="Color adjustment information"
                   >
+                    ?
+                  </button>
                 </label>
                 <input
                   type="range"
@@ -129,6 +176,14 @@
                 <span class="text-sm text-gray-500 dark:text-gray-400"
                   >{{ colorAdjustment }}%</span
                 >
+                <div
+                  v-if="activeTooltip === 'colorAdjustment'"
+                  class="mt-2 p-2 bg-gray-100 dark:bg-gray-700 rounded text-sm text-gray-700 dark:text-gray-300"
+                >
+                  Controls the balance between the original image colors and the
+                  mosaic tile colors. Higher values result in a mosaic that's
+                  closer to the original image colors.
+                </div>
               </div>
             </div>
 
@@ -244,6 +299,12 @@
 import { ref, onMounted, onUnmounted, watch } from "vue";
 import { useHead } from "#imports";
 import { useRuntimeConfig } from "#app";
+import { ChevronUpIcon } from "@heroicons/vue/24/solid";
+import {
+  Disclosure as HeadlessDisclosure,
+  DisclosureButton as HeadlessDisclosureButton,
+  DisclosurePanel as HeadlessDisclosurePanel,
+} from "@headlessui/vue";
 
 const targetPhoto = ref(null);
 const poolPhotos = ref([]);
@@ -257,6 +318,7 @@ const error = ref(null);
 const percentProgress = ref(0);
 const elapsedTime = ref(0);
 const config = useRuntimeConfig();
+const activeTooltip = ref(null);
 let worker = null;
 let generationTimeout = null;
 let elapsedTimeInterval = null;
@@ -334,7 +396,9 @@ const initializeWorker = () => {
 
 const handleError = (errorMessage) => {
   console.error("Error in mosaic generation:", errorMessage);
-  error.value = errorMessage;
+  error.value = errorMessage.includes("Failed to process")
+    ? errorMessage
+    : "An error occurred during mosaic generation. Please try again with different images or settings.";
   isGenerating.value = false;
   progress.value = "";
   percentProgress.value = 0;
@@ -470,6 +534,14 @@ const downloadMosaic = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  }
+};
+
+const toggleTooltip = (tooltipName) => {
+  if (activeTooltip.value === tooltipName) {
+    activeTooltip.value = null;
+  } else {
+    activeTooltip.value = tooltipName;
   }
 };
 </script>
