@@ -2,6 +2,8 @@ let targetBuffer = null;
 let poolBuffers = [];
 let tileSize = 20;
 let colorAdjustment = 0.5;
+let receivedChunks = [];
+let totalSize = 0;
 
 self.onmessage = async function (e) {
   try {
@@ -9,6 +11,8 @@ self.onmessage = async function (e) {
     if (e.data.action === "start") {
       targetBuffer = null;
       poolBuffers = [];
+      receivedChunks = [];
+      totalSize = 0;
       tileSize = e.data.tileSize;
       colorAdjustment = e.data.colorAdjustment;
       console.log(
@@ -17,6 +21,31 @@ self.onmessage = async function (e) {
         "and colorAdjustment:",
         colorAdjustment
       );
+    } else if (e.data.chunk) {
+      // Receive and process chunks
+      receivedChunks.push(e.data.chunk);
+      totalSize += e.data.chunk.byteLength;
+
+      if (e.data.end === e.data.total) {
+        // All chunks received, combine them
+        const completeBuffer = new Uint8Array(totalSize);
+        let offset = 0;
+        for (const chunk of receivedChunks) {
+          completeBuffer.set(new Uint8Array(chunk), offset);
+          offset += chunk.byteLength;
+        }
+
+        // Process the complete buffer
+        if (!targetBuffer) {
+          targetBuffer = completeBuffer;
+        } else {
+          poolBuffers.push(completeBuffer);
+        }
+
+        // Clear received chunks
+        receivedChunks = [];
+        totalSize = 0;
+      }
     } else if (e.data.action === "clear") {
       targetBuffer = null;
       poolBuffers = [];

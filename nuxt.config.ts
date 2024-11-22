@@ -6,15 +6,21 @@ export default defineNuxtConfig({
     '@vueuse/nuxt',
   ],
   build: {
-    transpile: ['@vueuse/head'],
+    transpile: ['@headlessui/vue', '@heroicons/vue'],
   },
   vueuse: {
     ssrHandlers: true,
   },
   runtimeConfig: {
     public: {
-      version: '1.2.1'
+      version: '1.3.0'
     }
   },
-  compatibilityDate: '2024-11-20'
+  compatibilityDate: '2024-11-20',
+  components: [
+    {
+      path: '~/node_modules/@headlessui/vue/dist/components',
+      prefix: 'Headless',
+    },
+  ],
 })
