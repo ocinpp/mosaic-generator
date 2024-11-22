@@ -14,14 +14,17 @@ A Vue.js application that generates photo mosaics by combining a target image wi
 - Dark mode toggle
 - Responsive design that works on both desktop and mobile devices
 - Download generated mosaic
+- Collapsible "Important Information" section
+- Tooltips for Tile Size and Color Adjustment parameters
 
 ## Recent Updates
 
-- Added dark mode support
-- Improved error handling and logging for better debugging
-- Added tooltips for Tile Size and Color Adjustment parameters
-- Fixed issues with mosaic generation for different tile sizes
-- Improved progress reporting during mosaic generation
+- Added a collapsible "Important Information" section using Headless UI components
+- Implemented tooltips for Tile Size and Color Adjustment sliders
+- Updated ChevronUpIcon import to use "@heroicons/vue/24/solid"
+- Enhanced mosaic generation process in the Web Worker
+- Improved error handling in the Web Worker
+- Fixed issues with chunk processing in the Web Worker
 
 ## Mosaic Parameters
 
@@ -47,41 +50,37 @@ Before you begin, ensure you have the following installed:
 2. **Install dependencies**
 
     ```bash
-    # Using npm# Using npm
+    # Using npm
     npm install
 
     # Using yarn
     yarn install
-
     ```
 
 3. **Start the development server**
 
     ```bash
-    # Using npm# Using npm
+    # Using npm
     npm run dev
 
     # Using yarn
     yarn dev
-
     ```
 
 4. **Open your browser**
 
     Navigate to `http://localhost:3000` to see the application running.
 
-
 ## Project Structure
 
 ```plaintext
- mosaic-generator/mosaic-generator/
+mosaic-generator/
 ├── pages/
 │   └── index.vue      # Main application component
 ├── public/
 │   └── mosaic-worker.js    # Web Worker for image processing
 ├── nuxt.config.ts     # Nuxt configuration
 └── package.json       # Project dependencies
-
 ```
 
 ## How It Works
@@ -114,6 +113,7 @@ Before you begin, ensure you have the following installed:
 - **Chunked Data Transfer**: Splits large images into 5MB chunks for efficient transfer
 - **Canvas API**: Used for image manipulation and color analysis
 - **Vue 3 Composition API**: Manages application state and UI updates
+- **Headless UI**: Implements collapsible sections and tooltips
 
 ## Usage
 
@@ -166,26 +166,21 @@ Before you begin, ensure you have the following installed:
 
 ### Building for Production
 
-```bash
- # Using npm# Using npm
-npm run build
-npm run start
+    ```bash
+    # Using npm
+    npm run build
+    npm run start
 
-# Using yarn
-yarn build
-yarn start
-
-```
+    # Using yarn
+    yarn build
+    yarn start
+    ```
 
 ## Troubleshooting
 
 If you encounter any issues with mosaic generation:
 
 1. **Check the browser console for error messages or logs**
-
-    - Open your browser's developer tools (usually F12 or right-click and select "Inspect")
-    - Go to the Console tab to view any error messages or logs
-
 2. **Image Upload Issues**
 
     - Ensure images are in supported formats (PNG, JPEG)
@@ -202,14 +197,11 @@ If you encounter any issues with mosaic generation:
     - Try updating your browser to the latest version
 
 5. **Clear browser cache and reload**
-
-    - Sometimes, clearing your browser's cache and reloading the page can resolve issues
-
 6. **Check for updates**
 
     - Make sure you're using the latest version of the application
 
-If the issue persists after trying these steps, please report it by opening an issue on the project repository with a detailed description of the problem and steps to reproduce it.
+If the issue persists, please report it by opening an issue on the project repository with a detailed description of the problem and steps to reproduce it.
 
 ## Contributing
 
@@ -225,4 +217,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Acknowledgements
 
+This project uses various open-source libraries and tools. We thank the community for their contributions.
+
 This project was created by v0, an advanced AI coding assistant developed by Vercel. v0 is designed to assist developers in creating efficient, modern web applications.
+
+Made with ❤️ by the Mosaic Photo Generator Team
