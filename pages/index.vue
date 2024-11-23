@@ -101,7 +101,7 @@
         <div class="flex flex-col lg:flex-row">
           <div class="lg:w-1/4 lg:pr-8">
             <div
-              class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 mb-8 max-w-sm mx-auto"
+              class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 mb-8"
             >
               <h2
                 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white"
