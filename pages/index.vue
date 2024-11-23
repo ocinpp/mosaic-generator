@@ -3,6 +3,58 @@
     :class="{ dark: isDarkMode }"
     class="min-h-screen bg-gray-100 dark:bg-gray-900"
   >
+    <!-- Overlay to close sidebar when clicking outside -->
+    <div
+      v-if="isSidebarOpen"
+      class="fixed inset-0 bg-black bg-opacity-50 z-40"
+      @click="closeSidebar"
+    ></div>
+
+    <!-- Hamburger button (now below the sidebar) -->
+    <button
+      @click="toggleSidebar"
+      class="fixed top-4 right-4 z-30 p-2 rounded-md bg-white dark:bg-gray-800 shadow-md"
+      aria-label="Toggle sidebar"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-6 w-6 text-gray-600 dark:text-gray-300"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M4 6h16M4 12h16M4 18h16"
+        />
+      </svg>
+    </button>
+
+    <!-- Sidebar -->
+    <div
+      :class="{
+        'translate-x-0': isSidebarOpen,
+        'translate-x-full': !isSidebarOpen,
+      }"
+      class="fixed top-0 right-0 h-full w-64 bg-white dark:bg-gray-800 shadow-lg transform transition-transform duration-300 ease-in-out z-50"
+    >
+      <div class="p-4">
+        <button
+          @click="toggleDarkMode"
+          class="w-full mb-4 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white font-bold py-2 px-4 rounded"
+          aria-label="Toggle dark mode"
+        >
+          {{ isDarkMode ? "Light Mode" : "Dark Mode" }}
+        </button>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          Version: {{ config.public.version }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Main content -->
     <div class="py-12 px-4 sm:px-6 lg:px-8">
       <div class="max-w-7xl mx-auto">
         <h1
@@ -242,20 +294,6 @@
             </main>
           </div>
         </div>
-        <div
-          class="fixed bottom-4 right-4 text-sm text-gray-500 dark:text-gray-400"
-        >
-          v{{ config.public.version }}
-        </div>
-        <div class="fixed top-4 right-4">
-          <button
-            @click="toggleDarkMode"
-            class="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white font-bold py-2 px-4 rounded"
-            aria-label="Toggle dark mode"
-          >
-            {{ isDarkMode ? "Light Mode" : "Dark Mode" }}
-          </button>
-        </div>
       </div>
     </div>
 
@@ -319,6 +357,7 @@ const percentProgress = ref(0);
 const elapsedTime = ref(0);
 const config = useRuntimeConfig();
 const activeTooltip = ref(null);
+const isSidebarOpen = ref(false);
 let worker = null;
 let generationTimeout = null;
 let elapsedTimeInterval = null;
@@ -362,6 +401,18 @@ watch(isDarkMode, (newValue) => {
     document.documentElement.classList.remove("dark");
   }
 });
+
+const toggleSidebar = () => {
+  isSidebarOpen.value = !isSidebarOpen.value;
+};
+
+const closeSidebar = () => {
+  isSidebarOpen.value = false;
+};
+
+const toggleDarkMode = () => {
+  isDarkMode.value = !isDarkMode.value;
+};
 
 const initializeWorker = () => {
   console.log("Initializing worker");
@@ -467,19 +518,19 @@ const generateMosaic = async () => {
 
     // Send data in chunks
     const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB chunks
-    const sendChunk = (data, isTarget) => {
-      for (let start = 0; start < data.byteLength; start += CHUNK_SIZE) {
-        const end = Math.min(start + CHUNK_SIZE, data.byteLength);
-        worker.postMessage(
-          {
-            chunk: data.slice(start, end),
-            start,
-            end,
-            total: data.byteLength,
-            isTarget,
-          },
-          [data.slice(start, end)]
-        );
+    const sendChunk = (data, start) => {
+      const end = Math.min(start + CHUNK_SIZE, data.byteLength);
+      worker.postMessage(
+        {
+          chunk: data.slice(start, end),
+          start,
+          end,
+          total: data.byteLength,
+        },
+        [data.slice(start, end)]
+      );
+      if (end < data.byteLength) {
+        setTimeout(() => sendChunk(data, end), 0);
       }
     };
 
@@ -488,9 +539,9 @@ const generateMosaic = async () => {
       tileSize: Number(tileSize.value),
       colorAdjustment: colorAdjustment.value / 100,
     });
-    sendChunk(targetBuffer, true);
+    sendChunk(targetBuffer, 0);
     for (const buffer of poolBuffers) {
-      sendChunk(buffer, false);
+      sendChunk(buffer, 0);
     }
     worker.postMessage({ action: "process" });
 
@@ -520,10 +571,6 @@ const cancelGeneration = () => {
   elapsedTime.value = 0;
   clearTimeout(generationTimeout);
   clearInterval(elapsedTimeInterval);
-};
-
-const toggleDarkMode = () => {
-  isDarkMode.value = !isDarkMode.value;
 };
 
 const downloadMosaic = () => {
