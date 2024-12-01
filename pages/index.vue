@@ -112,7 +112,7 @@
                 type="file"
                 accept="image/*"
                 @change="handleTargetPhotoUpload"
-                class="mb-4"
+                class="mb-4 w-full"
                 aria-label="Select target photo"
               />
               <div v-if="targetPhoto" class="mb-4 flex justify-center">
